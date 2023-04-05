@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras import layers
 import seaborn as sns
 import matplotlib.pyplot as plt
 
@@ -12,52 +11,38 @@ test_data = pd.read_csv('Data3_test.csv', sep=';', names=["x", "y", "label"])
 # normalize data
 data = train_data.append(test_data)
 data = (data-data.min())/(data.max()-data.min())
-
-
+train_data = data.iloc[:100]
+test_data = data.iloc[100:]
+# split into labels and features
 train_features = train_data.copy()
 train_labels = train_features.pop("label")
-train_labels = (train_labels + 1)/2
-train_features = (train_features + 2)/10
 train_features = np.array(train_features)
-# load testing data
 test_features = test_data.copy()
 test_labels = test_features.pop("label")
-test_labels = (test_labels + 1)/2
-test_features = (test_features + 2)/10
 test_features = np.array(test_features)
 
 
-# build a machine learning project
+# build model
 model = tf.keras.models.Sequential([
   tf.keras.layers.Dense(1)
 ])
-
 model.compile(optimizer='adam',
               loss=tf.keras.losses.MeanSquaredError(),
               metrics=['accuracy'])
 
 
-# train and evaluate your model
-model.fit(train_features, train_labels, epochs=3)
-weights = model.layers[0].get_weights()
-#
-# model.evaluate(x_test,  y_test, verbose=2)
-#
-# probability_model = tf.keras.Sequential([
-#   model,
-#   tf.keras.layers.Softmax()
-# ])
-#
-# print(probability_model(x_test[:5]))
+# train and evaluate model
+model.fit(train_features, train_labels, epochs=1000)
+[[[w0], [w1]], [b]] = model.layers[0].get_weights()
+
+model.evaluate(test_features, test_labels, verbose=2)
 
 
 # plot
-data = pd.DataFrame()
-sns.scatterplot(data=train_data, x='x', y='y', hue='label')
+sns.scatterplot(data=test_data, x='x', y='y', hue='label')
 
-# # TODO: get weights from model
-# boundary_x = np.linspace(np.min(train_data.x), np.max(train_data.x), 100)
-# boundary_y = -(weights[0] * boundary_x + bias) / weights[1]
-# sns.lineplot(x=boundary_x, y=boundary_y)
-#
+boundary_x = np.linspace(np.min(data.x), np.max(data.x), 100)
+boundary_y = (0.5/w1) - (b/w1) - (w0/w1)*boundary_x
+sns.lineplot(x=boundary_x, y=boundary_y)
+
 plt.show()
